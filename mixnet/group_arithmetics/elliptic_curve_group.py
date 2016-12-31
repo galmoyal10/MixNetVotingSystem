@@ -27,13 +27,13 @@ class EllipticCurvePoint(MultiplicativeGroupItem):
             raise NotImplementedError("Unexpected input at point initialization")
 
     # Returns the multiplication of (self * other) mod q
-    def plus(self, other):
+    def _plus(self, other):
         assert type(other) is EllipticCurvePoint, "parameter given is not an Elliptic Curve Point!"
         assert self._ec_point.curve.name == other._ec_point.curve.name, "Points are not on the same curve"
 
         return EllipticCurvePoint(point=self._ec_point + other._ec_point)
 
-    def scalar_multiply(self, s):
+    def _scalar_multiply(self, s):
         return EllipticCurvePoint(point=self._ec_point * s)
 
     def inverse(self):

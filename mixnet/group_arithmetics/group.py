@@ -13,11 +13,11 @@ class MultiplicativeGroupItem(object):
     __metaclass__ = ABCMeta
 
     # Returns the multiplication of (self * other) mod q
-    def plus(self, other):
+    def __add__(self, other):
         raise NotImplementedError()
 
     # Returns the multiplication of self ^ exp = self * self * .. * self exp times.
-    def exponent(self, exp):
+    def __mul__(self, other):
         raise NotImplementedError()
 
     def inverse(self):
