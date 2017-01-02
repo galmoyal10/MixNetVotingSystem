@@ -37,20 +37,20 @@ class EllipticCurvePoint(MultiplicativeGroupItem):
         return EllipticCurvePoint(point=self._ec_point * s)
 
     def inverse(self):
-        return self.scalar_multiply(-1)
+        return self._scalar_multiply(-1)
 
     def __mul__(self, other):
-        return self.scalar_multiply(other)
+        return self._scalar_multiply(other)
 
     def __rmul__(self, other):
         return self.__mul__(other)
 
     def __sub__(self, other):
         assert type(other) is EllipticCurvePoint, "parameter given is not an Elliptic Curve Point!"
-        return self.plus(other.scalar_multiply(-1))
+        return self._plus(other.scalar_multiply(-1))
 
     def __add__(self, other):
-        return self.plus(other)
+        return self._plus(other)
 
     def __eq__(self, other):
         if type(other) is not EllipticCurvePoint:
