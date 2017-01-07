@@ -2,8 +2,6 @@ import tinyec.ec as ec
 import tinyec.registry as reg
 from group import *
 from copy import deepcopy
-import pdb
-
 
 class EllipticCurveGroup(MultiplicativeGroup):
 
@@ -36,14 +34,9 @@ class EllipticCurvePoint(MultiplicativeGroupItem):
     def _scalar_multiply(self, s):
         return EllipticCurvePoint(point=self._ec_point * s)
 
-    def inverse(self):
-        return self._scalar_multiply(-1)
 
     def __mul__(self, other):
         return self._scalar_multiply(other)
-
-    def __rmul__(self, other):
-        return self.__mul__(other)
 
     def __sub__(self, other):
         assert type(other) is EllipticCurvePoint, "parameter given is not an Elliptic Curve Point!"
@@ -56,9 +49,6 @@ class EllipticCurvePoint(MultiplicativeGroupItem):
         if type(other) is not EllipticCurvePoint:
             return False
         return self._ec_point == other._ec_point
-
-    def __ne__(self, other):
-        return not self.__eq__(other)
 
     def __str__(self):
         return self._ec_point.__str__()

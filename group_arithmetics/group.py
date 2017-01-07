@@ -22,3 +22,12 @@ class MultiplicativeGroupItem(object):
 
     def inverse(self):
         raise NotImplementedError()
+
+    def __rmul__(self, other):
+        return self.__mul__(other)
+
+    def __ne__(self, other):
+        return not self.__eq__(other)
+
+    def inverse(self):
+        return self.__mul__(-1)
