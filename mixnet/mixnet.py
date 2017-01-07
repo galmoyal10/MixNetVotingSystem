@@ -1,4 +1,5 @@
 from switch import *
+from server import *
 
 
 """
@@ -60,29 +61,9 @@ def get_network_stages(size, switch_generator):
     return [list(stage) for stage in zip(*build_network(size, switch_generator))]
 
 
-def run_mix(input, stages):
-    stage_outputs = []
-    stage_input = input
-    for stage in stages:
-        stage_output = [None] * len(stage)
-        for switch, input_tuple in zip(stage, stage_input):
-            o0, o1 = switch.switch(*input_tuple)
-            input_in_switch, next_switch_index = switch.get_output0_index()
-            if stage_output[next_switch_index] is None:
-                stage_output[next_switch_index] = [None] * 2
-            stage_output[next_switch_index][input_in_switch] = o0
-
-            input_in_switch, next_switch_index = switch.get_output1_index()
-            if stage_output[next_switch_index] is None:
-                stage_output[next_switch_index] = [None] * 2
-            stage_output[next_switch_index][input_in_switch] = o1
-        stage_outputs.append(stage_output)
-        stage_input = stage_output
-
-    return stage_outputs
-
 if __name__ == '__main__':
     net = get_network_stages(8, SwitchGenerator(DummySwitch))
-    bb = run_mix([[0,1],[2,3],[4,5],[6,7]], net)
+    s = Server({(0, 0): 0, (1, 0): 1, (0, 1): 2, (1, 1): 3, (0, 2): 4, (1, 2): 5, (0, 3): 6, (1, 3): 7}, net)
+    bb = s.mix()
     print bb
 
