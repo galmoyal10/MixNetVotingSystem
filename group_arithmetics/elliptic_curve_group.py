@@ -10,7 +10,7 @@ class EllipticCurveGroup(MultiplicativeGroup):
     def __init__(self, g, q):
         self._g = g
         self._q = q
-
+        self.q = q
     # returns (p,q,g) such as p,q large primes p = 2q+1
     def generate(self):
         raise NotImplementedError()

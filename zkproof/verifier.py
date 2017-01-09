@@ -1,4 +1,4 @@
-from mixnet.group_arithmetics.elliptic_curve_group import *
+import mixnet.group_arithmetics.elliptic_curve_group as ecg
 import random as rand
 class PermutationVerifier:
     def __init__(self, generator, grp, y):
@@ -12,9 +12,6 @@ class PermutationVerifier:
         self.g = generator
         rand.seed(17)
         return
-
-    def generateBits(self, n):
-        return rand.getrandbits(k=n)
 
     def resetParameters(self, inM, inG, outM, outG):
         # Switch-Gate inputs
@@ -33,7 +30,7 @@ class PermutationVerifier:
         self.W = wMatrix
 
         # Generate a challenge c from Z_q
-        self.c = self.group.rand()
+        self.c = self.randNum()
 
         return self.c
 
@@ -43,7 +40,7 @@ class PermutationVerifier:
     def verify(self, e, z):
 
         # Validation check for e0 + e1 = c (mod q)
-        if e[0] + e[1] != self.c:
+        if self.c != (e[0] + e[1]) % self.group.q:
             return 0
 
         # Other checks validating the correctness of T_[b,i] and W_[b,i], for some b,i
@@ -68,3 +65,10 @@ class PermutationVerifier:
                 if not (T_bi == self.T[b, i] and W_bi == self.W[b, i]):
                     return 0
         return 1
+
+
+    def randNum(self):
+        return ecg(rand.randrange(self.group.q))
+
+    def randBit(self):
+        return rand.choice([0, 1])

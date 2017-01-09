@@ -1,5 +1,6 @@
 import numpy as np
-from mixnet.group_arithmetics.elliptic_curve_group import *
+import mixnet.group_arithmetics.elliptic_curve_group as ecg
+import random as rand
 
 class PermutationProver:
     def __init__(self, generator, grp, y):
@@ -30,9 +31,9 @@ class PermutationProver:
         self.nb = 1 - self.b
 
         # Generate random values from the group Z_q
-        z_nb = [self.group.rand() for i in range(0, 2)]
-        self.w = [self.group.rand() for i in range(0, 2)]
-        self.e_nb = self.group.rand()
+        z_nb = [self.randNum() for i in range(0, 2)]
+        self.w = [self.randNum() for i in range(0, 2)]
+        self.e_nb = self.randNum()
 
         T = np.zeros((2, 2))
         W = np.zeros((2, 2))
@@ -65,13 +66,19 @@ class PermutationProver:
     def respond(self, c):
         # Calculate e_0, e_1
         e = np.zeros(2)
-        e[self.b] = c - self.e_nb
+        e[self.b] = (c - self.e_nb) % self.group.q
         e[self.nb] = self.e_nb
 
         # Calculate z_[i,j] (for i,j in [0,1])
         z = np.zeros((2, 2))
         for i in range(0, 2):
             for b in range(0, 2):
-                z[b, i] = self.w[i] - e[b] * self.r[i]
+                z[b, i] = (self.w[i] - e[b] * self.r[i]) % self.group.q
 
         return e, z
+
+    def randNum(self):
+        return ecg(rand.randrange(self.group.q))
+
+    def randBit(self):
+        return rand.choice([0, 1])
