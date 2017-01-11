@@ -63,7 +63,7 @@ def get_network_stages(size, switch_generator):
 
 if __name__ == '__main__':
     net = get_network_stages(8, SwitchGenerator(DummySwitch))
-    s = Server({(0, 0): 0, (1, 0): 1, (0, 1): 2, (1, 1): 3, (0, 2): 4, (1, 2): 5, (0, 3): 6, (1, 3): 7}, net)
+    s = Server([0, 1, 2, 3, 4, 5, 6, 7], net)
     bb = s.mix()
     print bb
 

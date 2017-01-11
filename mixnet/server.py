@@ -1,7 +1,7 @@
 class Server(object):
 
     def __init__(self, initial_input, mixnet_stages):
-        self._initial_input = initial_input
+        self._initial_input = self._generate_initial_input_config(initial_input)
         self._mixnet_stages = mixnet_stages
 
     def mix(self):
@@ -25,6 +25,13 @@ class Server(object):
             output[switch.get_output1_index()] = o1
 
         return output
+
+    def _generate_initial_input_config(self, initial_input):
+        configured_input = dict()
+        for i in range(0, len(initial_input), 2):
+            configured_input[(0, i/2)] = initial_input[i]
+            configured_input[(1, i/2)] = initial_input[i + 1]
+        return configured_input
 
     def _prove_stage(self, stage_input, stage_output):
         raise NotImplementedError()
