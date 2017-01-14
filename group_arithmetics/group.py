@@ -1,4 +1,4 @@
-from abc import ABCMeta
+from abc import ABCMeta, abstractmethod
 
 
 class MultiplicativeGroup(object):
@@ -13,13 +13,18 @@ class MultiplicativeGroupItem(object):
     __metaclass__ = ABCMeta
 
     # Returns the multiplication of (self * other) mod q
+    @abstractmethod
     def __add__(self, other):
         raise NotImplementedError()
 
-    # Returns the multiplication of self ^ exp = self * self * .. * self exp times.
+    @abstractmethod
     def __mul__(self, other):
+        """
+        :return: multiplication of self * exp = self + self + .. + self exp times.
+        """
         raise NotImplementedError()
 
+    @abstractmethod
     def inverse(self):
         raise NotImplementedError()
 
@@ -29,5 +34,3 @@ class MultiplicativeGroupItem(object):
     def __ne__(self, other):
         return not self.__eq__(other)
 
-    def inverse(self):
-        return self.__mul__(-1)

@@ -2,10 +2,12 @@ from switch import Switch
 from random import randint
 Z_Q = None
 
+
 class EGTuple:
     def __init__(self, m, g):
         self.m = m
         self.g = g
+
 
 class ElGamalSwitch(Switch):
     def __init__(self,o1=(0, 0), o2=(0, 0)):
@@ -24,8 +26,6 @@ class ElGamalSwitch(Switch):
         else:
             return i1_switch, i0_switch
 
-
-
-    def setEncParams(self, public_key, g):
+    def set_enc_params(self, public_key, g):
         self._pk = public_key
         self._g = g

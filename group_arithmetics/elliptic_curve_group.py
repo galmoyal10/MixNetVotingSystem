@@ -3,14 +3,17 @@ import tinyec.registry as reg
 from group import *
 from copy import deepcopy
 
-class EllipticCurveGroup(MultiplicativeGroup):
 
+class EllipticCurveGroup(MultiplicativeGroup):
     def __init__(self, g, q):
         self._g = g
         self._q = q
         self.q = q
-    # returns (p,q,g) such as p,q large primes p = 2q+1
+
     def generate(self):
+        """
+        :return:(p,q,g) such as p,q large primes p = 2q+1
+        """
         raise NotImplementedError()
 
 
@@ -24,7 +27,7 @@ class EllipticCurvePoint(MultiplicativeGroupItem):
         else:
             raise NotImplementedError("Unexpected input at point initialization")
 
-    # Returns the multiplication of (self * other) mod q
+
     def _plus(self, other):
         assert type(other) is EllipticCurvePoint, "parameter given is not an Elliptic Curve Point!"
         assert self._ec_point.curve.name == other._ec_point.curve.name, "Points are not on the same curve"
@@ -34,13 +37,15 @@ class EllipticCurvePoint(MultiplicativeGroupItem):
     def _scalar_multiply(self, s):
         return EllipticCurvePoint(point=self._ec_point * s)
 
+    def inverse(self):
+        return self.__mul__(-1)
 
     def __mul__(self, other):
         return self._scalar_multiply(other)
 
     def __sub__(self, other):
         assert type(other) is EllipticCurvePoint, "parameter given is not an Elliptic Curve Point!"
-        return self._plus(other.scalar_multiply(-1))
+        return self._plus(other.inverse())
 
     def __add__(self, other):
         return self._plus(other)

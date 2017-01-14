@@ -40,25 +40,23 @@ class PermutationProver:
 
         for i in range(0, 2):
             # Calculate T_[b,i] = exp(y, w_i)
-            T[self.b, i] = self.y.exponent(self.w[i])
+            T[self.b, i] = self.y * self.w[i]
 
             # Calculate W_[b,i] = exp(g, w_i)
-            W[self.b, i] = self.g.exponent(self.w[i])
+            W[self.b, i] = self.g * self.w[i]
 
             nb_xor_i = self.nb ^ i
             # Calculate T_[nb,i]
-            expy = self.y.exponent(z_nb[i])
+            expy = self.y * z_nb[i]
             outM = self.outM[nb_xor_i]
-            inM_inverse = self.inM[i].inverse()
-            outM_inMInv = outM * inM_inverse
-            T[self.nb, i] = expy * outM_inMInv.exp(self.e_nb)
+            outM_inMInv = outM + self.inM[i].inverse()
+            T[self.nb, i] = expy + outM_inMInv * self.e_nb
 
             # Calculate W_[nb,i]
-            expg = self.g.exponent(z_nb[i])
+            expg = self.g * z_nb[i]
             outG = self.outG[nb_xor_i]
-            inG_inverse = self.inG[i].inverse()
-            outG_inGInv = outG * inG_inverse
-            W[self.nb, i] = expg * outG_inGInv.exp(self.e_nb)
+            outG_inGInv = outG + self.inG[i].inverse()
+            W[self.nb, i] = expg + outG_inGInv * self.e_nb
 
         return T, W
 

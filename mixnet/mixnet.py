@@ -2,10 +2,10 @@ from switch import *
 from server import *
 
 
-"""
-size must be a power of 2
-"""
 def build_network(size, switch_generator):
+    """
+    size must be a power of 2
+    """
     if size == 2:
         network = [[switch_generator.gen((0, 0), (0, 0))]]
     else:

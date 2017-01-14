@@ -49,18 +49,16 @@ class PermutationVerifier:
                 b_xor_i = b ^ i
 
                 # Calculate T_[b,i]
-                expy = self.y.exponent(z[b, i])
+                expy = self.y * z[b, i]
                 outM = self.outputM[b_xor_i]
-                inM_inverse = self.inputM[i].inverse()
-                outM_inMInv = outM * inM_inverse
-                T_bi = expy * outM_inMInv.exp(e[b])
+                outM_inMInv = outM + self.inputM[i].inverse()
+                T_bi = expy + outM_inMInv * e[b]
 
                 # Calculate W_[b,i]
-                expg = self.g.exponent(z[b, i])
+                expg = self.g * z[b, i]
                 outG = self.outputG[b_xor_i]
-                inG_inverse = self.inputG[i].inverse()
-                outG_inGInv = outG * inG_inverse
-                W_bi = expg * outG_inGInv.exp(e[b])
+                outG_inGInv = outG + self.inputG[i].inverse()
+                W_bi = expg + outG_inGInv * e[b]
 
                 if not (T_bi == self.T[b, i] and W_bi == self.W[b, i]):
                     return 0
