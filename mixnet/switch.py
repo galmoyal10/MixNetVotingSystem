@@ -36,7 +36,7 @@ class DummySwitch(Switch):
         super(DummySwitch, self).__init__(o1, o2)
 
     def switch(self, i0, i1):
-        return i1, i0
+        return i1, i0, 1
 
 
 class SwitchGenerator:

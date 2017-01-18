@@ -1,5 +1,6 @@
 from switch import Switch
 from random import randint
+
 Z_Q = None
 
 
@@ -14,18 +15,19 @@ class ElGamalSwitch(Switch):
         super(ElGamalSwitch, self).__init__(o1, o2)
 
     def switch(self, i0, i1):
-        r0 = Z_Q.generate()
-        r1 = Z_Q.generate()
+        r0 = randint(0, self._q)
+        r1 = randint(0, self._q)
         b = randint(0, 1)
 
-        i0_switch = EGTuple(i0.m * (self._pk ^ r0), i0.g * (self._g ^ r0))
-        i1_switch = EGTuple(i1.m * (self._pk ^ r1), i1.g * (self._g ^ r1))
-
+        i0_switch = EGTuple(i0.m * (self._pk ** r0), i0.g * (self._g ** r0))
+        i1_switch = EGTuple(i1.m * (self._pk ** r1), i1.g * (self._g ** r1))
+        # return the switched output and a bit that indicates whether the inputs were switched or not
         if b:
-            return i0_switch, i1_switch
+            return i0_switch, i1_switch, b
         else:
-            return i1_switch, i0_switch
+            return i1_switch, i0_switch, b
 
-    def set_enc_params(self, public_key, g):
+    def set_enc_params(self, public_key, g, q):
         self._pk = public_key
         self._g = g
+        self._q = q

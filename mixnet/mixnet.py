@@ -62,8 +62,10 @@ def get_network_stages(size, switch_generator):
 
 
 if __name__ == '__main__':
-    net = get_network_stages(8, SwitchGenerator(DummySwitch))
-    s = Server([0, 1, 2, 3, 4, 5, 6, 7], net)
+    net = get_network_stages(1024, SwitchGenerator(DummySwitch))
+    s = Server(range(0,1024), net)
     bb = s.mix()
+    assert sum(bb[18][0].values()) != sum(range(0,1024)) ,  sum(bb[18][0].values())
+
     print bb
 
