@@ -56,4 +56,4 @@ class Server(object):
         outG[0] = o0.g
         outG[1] = o1.g
 
-        return self._prover.commit(inM, inG, outM, outG, b)
+        return self._prover.prove(inM, inG, outM, outG, b)

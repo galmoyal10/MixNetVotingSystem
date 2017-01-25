@@ -19,13 +19,13 @@ class ElGamalSwitch(Switch):
         r1 = randint(0, self._q)
         b = randint(0, 1)
 
-        i0_switch = EGTuple(i0.m * (self._pk ** r0), i0.g * (self._g ** r0))
-        i1_switch = EGTuple(i1.m * (self._pk ** r1), i1.g * (self._g ** r1))
+        o0_switch = EGTuple(i0.m + (self._pk * r0), i0.g + (self._g * r0))
+        o1_switch = EGTuple(i1.m + (self._pk * r1), i1.g + (self._g * r1))
         # return the switched output and a bit that indicates whether the inputs were switched or not
         if b:
-            return i0_switch, i1_switch, b
+            return o0_switch, o1_switch, b
         else:
-            return i1_switch, i0_switch, b
+            return o1_switch, o0_switch, b
 
     def set_enc_params(self, public_key, g, q):
         self._pk = public_key
