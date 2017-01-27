@@ -28,6 +28,7 @@ class FsPermutationProver:
 
     # Create a challenge based on T, W
     def getChallenge(self, tMatrix, wMatrix):
+        # TODO : Change to protobuf serialization
         return hl.sha256(tMatrix.tostring() + wMatrix.tostring())
 
     # Generate a random number from Z_q (q is given by self.group)

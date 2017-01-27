@@ -16,49 +16,37 @@ class PermutationProver:
         return
 
     # Create a commitment
-    def commit(self, inM, inG, outM, outG, b, r):
-        # Switching-gate's inputs
-        self.inM = inM
-        self.inG = inG
-
-        # Switching-gate's outputs
-        self.outM = outM
-        self.outG = outG
+    def commit(self, in_m, in_g, out_m, out_g, b, r):
 
         # Randomly generated b, r0, r1
-        self.r = r
-        self.b = b
-        self.nb = 1 - self.b
+        self._r = r
+        self._b = b
+        self._nb = 1 - self._b
 
         # Generate random values from the group Z_q
-        z_nb = [self.randNum() for _ in range(0, 2)]
-        self.w = [self.randNum() for _ in range(0, 2)]
-        self.e_nb = self.randNum()
+        z_nb = [self.rand_num() for _ in xrange(2)]
+        self.w = [self.rand_num() for _ in xrange(2)]
+        self._e_nb = self.rand_num()
 
         T = np.zeros((2, 2))
         W = np.zeros((2, 2))
 
-        for i in range(0, 2):
+        for i in xrange(0, 2):
             # Calculate T_[b,i] = exp(y, w_i)
-            T[self.b, i] = self.y.exponent(self.w[i])
+            T[self._b, i] = self.y * self.w[i]
 
             # Calculate W_[b,i] = exp(g, w_i)
-            W[self.b, i] = self.g.exponent(self.w[i])
+            W[self._b, i] = self.g * self.w[i]
 
-            nb_xor_i = self.nb ^ i
+            nb_xor_i = self._nb ^ i
+
             # Calculate T_[nb,i]
-            expy = self.y.exponent(z_nb[i])
-            outM = self.outM[nb_xor_i]
-            inM_inverse = self.inM[i].inverse()
-            outM_inMInv = outM * inM_inverse
-            T[self.nb, i] = expy * outM_inMInv.exp(self.e_nb)
+            second_clause = (out_m[nb_xor_i] + in_m[i].inverse()) * self._e_nb
+            T[self._nb, i] = (self.y * z_nb[i]) + second_clause
 
             # Calculate W_[nb,i]
-            expg = self.g.exponent(z_nb[i])
-            outG = self.outG[nb_xor_i]
-            inG_inverse = self.inG[i].inverse()
-            outG_inGInv = outG * inG_inverse
-            W[self.nb, i] = expg * outG_inGInv.exp(self.e_nb)
+            outG_inGInv = (out_g[nb_xor_i] + in_g[i].inverse()) * self._e_nb
+            W[self._nb, i] = (self.g * z_nb[i] + outG_inGInv)
 
         return T, W
 
@@ -66,19 +54,16 @@ class PermutationProver:
     def respond(self, c):
         # Calculate e_0, e_1
         e = np.zeros(2)
-        e[self.b] = (c - self.e_nb) % self.group.q
-        e[self.nb] = self.e_nb
+        e[self._b] = (c - self._e_nb) % self.group.q
+        e[self._nb] = self._e_nb
 
         # Calculate z_[i,j] (for i,j in [0,1])
         z = np.zeros((2, 2))
         for i in range(0, 2):
             for b in range(0, 2):
-                z[b, i] = (self.w[i] - e[b] * self.r[i]) % self.group.q
+                z[b, i] = (self.w[i] - e[b] * self._r[i]) % self.group.q
 
         return e, z
 
-    def randNum(self):
-        return ecg(rand.randrange(self.group.q))
-
-    def randBit(self):
-        return rand.choice([0, 1])
+    def rand_num(self):
+        return rand.randrange(self.group.q)
