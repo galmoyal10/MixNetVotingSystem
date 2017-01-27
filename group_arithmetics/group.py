@@ -5,7 +5,8 @@ class MultiplicativeGroup(object):
     __metaclass__ = ABCMeta
 
     # returns (p,q,g) such as p,q large primes p = 2q+1
-    def generate(self):
+    @classmethod
+    def generate(cls):
         raise NotImplementedError()
 
 

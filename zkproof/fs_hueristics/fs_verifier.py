@@ -1,19 +1,11 @@
-import mixnet.group_arithmetics.elliptic_curve_group as ecg
 from zkproof.verifier import SwitchVerifier
 import hashlib as hl
 
-class FsPermutationVerifier:
-    def __init__(self, generator, grp, y, inM, inG, outM, outG):
-        # Switch-Gate inputs
-        self.inputM = inM
-        self.inputG = inG
 
-        # Switch-Gate ouputs
-        self.outputM = outM
-        self.outputG = outG
-
+class FsSwitchVerifier:
+    def __init__(self, generator, q, y):
         # Group used in the algorithm
-        self.group = grp
+        self.q = q
 
         # Prover's public key
         self.y = y
@@ -22,16 +14,17 @@ class FsPermutationVerifier:
         self.g = generator
 
         # Interactive sigma-protocol verifier
-        self.verifier = SwitchVerifier(generator, grp, y)
+        self.verifier = SwitchVerifier(generator, q, y, FsSwitchVerifier.getChallenge)
 
 
     # Given the prover's response to the challenge, verify the proof's validity
     # e - array of length 2
     # z - 2x2 matrix
-    def verify(self, tMatrix, wMatrix, e, z):
-        challenge = self.getChallenge(tMatrix, wMatrix)
-        return self.verifier.verify_stateless(e, z, inM, inG, outM, outG, challenge)
+    def verify(self, tMatrix, wMatrix, e, z, in_m, in_g, out_m, out_g):
+        self.verifier.challenge(tMatrix, wMatrix)
+        return self.verifier.verify(e, z, in_m, in_g, out_m, out_g)
 
     # Create a challenge based on T, W
-    def getChallenge(self, tMatrix, wMatrix):
-        return hl.sha256(tMatrix.tostring() + wMatrix.tostring())
+    @staticmethod
+    def getChallenge(tMatrix, wMatrix):
+        return int(hl.sha256(tMatrix.tostring() + wMatrix.tostring()).hexdigest(), 16)

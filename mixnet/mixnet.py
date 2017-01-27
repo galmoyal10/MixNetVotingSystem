@@ -1,6 +1,7 @@
 from switch import *
 from server import *
-
+from ElGamalSwitch import ElGamalSwitch, EGTuple
+from group_arithmetics.elliptic_curve_group import EllipticCurveGroup
 
 def build_network(size, switch_generator):
     """
@@ -61,11 +62,18 @@ def get_network_stages(size, switch_generator):
     return [list(stage) for stage in zip(*build_network(size, switch_generator))]
 
 
-if __name__ == '__main__':
-    net = get_network_stages(1024, SwitchGenerator(DummySwitch))
-    s = Server(range(0,1024), net)
-    bb = s.mix()
-    assert sum(bb[18][0].values()) != sum(range(0,1024)) ,  sum(bb[18][0].values())
+NET_SIZE = 4
 
+if __name__ == '__main__':
+    private_key = 6
+    p,q,g = EllipticCurveGroup.generate()
+    initial_input = list()
+    for index in xrange(1, NET_SIZE + 1):
+        initial_input.append(EGTuple((g * index) + ((g * private_key) * index), g * index))
+
+    net = get_network_stages(NET_SIZE, SwitchGenerator(ElGamalSwitch))
+    s = Server(initial_input, net, g, g * private_key, q)
+    bb = s.mix()
+    
     print bb
 
