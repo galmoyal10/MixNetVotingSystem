@@ -1,5 +1,8 @@
 import tinyec.ec as ec
 import tinyec.registry as reg
+
+from asn1crypto.keys import ECPoint
+
 from group import *
 from copy import deepcopy
 
@@ -26,6 +29,19 @@ class EllipticCurvePoint(MultiplicativeGroupItem):
             self._ec_point = ec.Point(reg.get_curve(kwargs['curve_name']), kwargs['x_coord'], kwargs['y_coord'])
         else:
             raise NotImplementedError("Unexpected input at point initialization")
+
+    @classmethod
+    def from_coords(cls, curve_name, x, y):
+        return EllipticCurvePoint(curve_name=curve_name, x_coord=x, y_coord=y)
+
+    @classmethod
+    def from_asn_bytestring(cls, curve_name, bytestring):
+        """
+        Creates an elliptic curve point from asn-1 encoded bytestring
+        """
+        asn1_ec = ECPoint.load(bytestring)
+        x,y = asn1_ec.to_coords()
+        return EllipticCurvePoint(curve_name=curve_name, x_coord=x, y_coord=y)
 
 
     def _plus(self, other):
@@ -60,3 +76,6 @@ class EllipticCurvePoint(MultiplicativeGroupItem):
 
     def __repr__(self):
         return self._ec_point.__repr__()
+
+    def asn1_encode(self):
+        return ECPoint.from_coords(self._ec_point.x, self._ec_point.y).dump()
