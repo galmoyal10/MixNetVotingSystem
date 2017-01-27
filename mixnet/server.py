@@ -1,13 +1,17 @@
-from zkproof.prover import PermutationProver
+from zkproof.fs_hueristics.fs_prover import FsSwitchProver
+from zkproof.fs_hueristics.fs_verifier import FsSwitchVerifier
 
 
 class Server(object):
 
-    def __init__(self, initial_input, mixnet_stages):
+    def __init__(self, initial_input, mixnet_stages, generator, public_key, q):
         self._initial_input = self._generate_initial_input_config(initial_input)
+        for layer in mixnet_stages:
+            for switch in layer:
+                switch.set_enc_params(public_key, generator, q)
         self._mixnet_stages = mixnet_stages
-        # TODO: init prover
-        self._prover = PermutationProver()
+        self._prover = FsSwitchProver(generator, q, public_key)
+        self._verifier = FsSwitchVerifier(generator, q, public_key)
 
     def mix(self):
         outputs = []
@@ -15,7 +19,7 @@ class Server(object):
         for stage in self._mixnet_stages:
             current_output, current_proof = self._mix_and_prove_stage(stage, current_input)
             outputs.append((current_output, current_proof))
-            current_input = current_output[0]
+            current_input = current_output
 
         return outputs
 
@@ -26,8 +30,13 @@ class Server(object):
         for i, switch in enumerate(stage):
             i0 = stage_input[(0, i)]
             i1 = stage_input[(1, i)]
-            o0, o1, b = switch.switch(i0, i1)
-            proofs.append(self._prove_switch(i0, i1, o0, o1, b))
+            o0, o1, b, r = switch.switch(i0, i1)
+            proof = self._prove_switch(i0, i1, o0, o1, b, r)
+            proofs.append(proof)
+            inM, inG = Server.cross_tuples(i0, i1)
+            outM, outG = Server.cross_tuples(o0, o1)
+            assert self._verifier.verify(proof[0], proof[1], proof[2], proof[3], inM, inG, outM, outG)
+
             output[switch.get_output0_index()] = o0
             output[switch.get_output1_index()] = o1
 
@@ -40,20 +49,22 @@ class Server(object):
             configured_input[(1, i/2)] = initial_input[i + 1]
         return configured_input
 
-    def _prove_switch(self, i0, i1, o0, o1, b):
+
+    def _prove_switch(self, i0, i1, o0, o1, b, r):
         #TODO: refactor the shit out of this!!!!
-        inM = []
-        inM[0] = i0.m
-        inM[1] = i1.m
-        inG = []
-        inG[0] = i0.g
-        inG[1] = i1.g
+        inM, inG = Server.cross_tuples(i0, i1)
+        outM, outG = Server.cross_tuples(o0, o1)
 
-        outM = []
-        outM[0] = o0.m
-        outM[1] = o1.m
-        outG = []
-        outG[0] = o0.g
-        outG[1] = o1.g
+        return self._prover.prove(inM, inG, outM, outG, b, r)
 
-        return self._prover.commit(inM, inG, outM, outG, b)
+
+    @staticmethod
+    def cross_tuples(t1, t2):
+        crossed_t1 = [0] * 2
+        crossed_t1[0] = t1.m
+        crossed_t1[1] = t2.m
+        crossed_t2 = [0] * 2
+        crossed_t2[0] = t1.g
+        crossed_t2[1] = t2.g
+
+        return crossed_t1, crossed_t2
