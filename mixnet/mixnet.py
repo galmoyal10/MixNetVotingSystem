@@ -62,11 +62,11 @@ def get_network_stages(size, switch_generator):
     return [list(stage) for stage in zip(*build_network(size, switch_generator))]
 
 
-NET_SIZE = 4
+NET_SIZE = 2
 
 if __name__ == '__main__':
     private_key = 6
-    p,q,g = EllipticCurveGroup.generate()
+    p, q, g = EllipticCurveGroup.generate()
     initial_input = list()
     for index in xrange(1, NET_SIZE + 1):
         initial_input.append(EGTuple((g * index) + ((g * private_key) * index), g * index))

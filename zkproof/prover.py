@@ -46,7 +46,7 @@ class SwitchProver:
 
             # Calculate W_[nb,i]
             outG_inGInv = (out_g[nb_xor_i] + in_g[i].inverse()) * self._e_nb
-            W[self._nb, i] = (self.g * z_nb[i] + outG_inGInv)
+            W[self._nb, i] = (self.g * z_nb[i]) + outG_inGInv
 
         return T, W
 
@@ -61,7 +61,7 @@ class SwitchProver:
         z = [[0,0], [0,0]]
         for i in range(0, 2):
             for b in range(0, 2):
-                z[b][i] = (self.w[i] - e[b] * self._r[i]) % self.q
+                z[b][i] = (self.w[i] - (e[b] * self._r[i])) % self.q
 
         return e, z
 

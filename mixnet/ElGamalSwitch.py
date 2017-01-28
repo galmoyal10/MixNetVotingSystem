@@ -23,9 +23,9 @@ class ElGamalSwitch(Switch):
         i1_switch = EGTuple(i1.m + (self._pk * r1), i1.g + (self._generator * r1))
         # return the switched output and a bit that indicates whether the inputs were switched or not
         if b:
-            return i0_switch, i1_switch, b, [r0,r1]
-        else:
             return i1_switch, i0_switch, b, [r0,r1]
+        else:
+            return i0_switch, i1_switch, b, [r0,r1]
 
     def set_enc_params(self, public_key, g, q):
         self._pk = public_key
