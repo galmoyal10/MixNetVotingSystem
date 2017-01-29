@@ -24,7 +24,9 @@ class SwitchProver:
         self._nb = 1 - self._b
 
         # Generate random values from the group Z_q
-        z_nb = [self.rand_num() for _ in xrange(2)]
+        self.z = [[0,0], [0,0]]
+        for i in xrange(2):
+            self.z[self._nb][i] = self.rand_num()
         self.w = [self.rand_num() for _ in xrange(2)]
         self._e_nb = self.rand_num()
 
@@ -42,11 +44,11 @@ class SwitchProver:
 
             # Calculate T_[nb,i]
             second_clause = (out_m[nb_xor_i] + in_m[i].inverse()) * self._e_nb
-            T[self._nb, i] = (self.y * z_nb[i]) + second_clause
+            T[self._nb, i] = (self.y * self.z[self._nb][i]) + second_clause
 
             # Calculate W_[nb,i]
             outG_inGInv = (out_g[nb_xor_i] + in_g[i].inverse()) * self._e_nb
-            W[self._nb, i] = (self.g * z_nb[i]) + outG_inGInv
+            W[self._nb, i] = (self.g * self.z[self._nb][i]) + outG_inGInv
 
         return T, W
 
@@ -57,13 +59,10 @@ class SwitchProver:
         e[self._b] = (c - self._e_nb) % self.q
         e[self._nb] = self._e_nb
 
-        # Calculate z_[i,j] (for i,j in [0,1])
-        z = [[0,0], [0,0]]
         for i in range(0, 2):
-            for b in range(0, 2):
-                z[b][i] = (self.w[i] - (e[b] * self._r[i])) % self.q
+            self.z[self._b][i] = (self.w[i] - (e[self._b] * self._r[i])) % self.q
 
-        return e, z
+        return e, self.z
 
     def rand_num(self):
         return rand.randrange(self.q)
