@@ -1,9 +1,6 @@
 from switch import Switch
 from random import randint
 
-Z_Q = None
-
-
 class EGTuple:
     def __init__(self, m, g):
         self.m = m

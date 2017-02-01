@@ -8,7 +8,7 @@ from copy import deepcopy
 
 
 class EllipticCurveGroup(MultiplicativeGroup):
-    CURVE_NAME = "secp192r1"
+    CURVE_NAME = "secp256r1"
     def __init__(self, g, q):
         self._g = g
         self._q = q
@@ -20,10 +20,11 @@ class EllipticCurveGroup(MultiplicativeGroup):
         :return:(p,q,g) such as p,q large primes p = 2q+1
         """
 
-        ec_order = reg.get_curve(EllipticCurveGroup.CURVE_NAME).field.n
+        field = reg.get_curve(EllipticCurveGroup.CURVE_NAME).field
+        ec_order = field.n
+
         return (2*ec_order+1, ec_order, EllipticCurvePoint.from_coords(EllipticCurveGroup.CURVE_NAME,
-                                                           602046282375688656758213480587526111916698976636884684818L,
-                                                           174050332293622031404857552280219410364023488927386650641L))
+                                       *field.g))
 
 
 class EllipticCurvePoint(MultiplicativeGroupItem):
