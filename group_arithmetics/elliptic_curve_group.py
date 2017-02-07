@@ -2,7 +2,6 @@ import tinyec.ec as ec
 import tinyec.registry as reg
 
 from asn1crypto.keys import ECPoint
-
 from group import *
 from copy import deepcopy
 
@@ -15,12 +14,12 @@ class EllipticCurveGroup(MultiplicativeGroup):
         self.q = q
 
     @classmethod
-    def generate(cls):
+    def generate(cls, curve_name = CURVE_NAME):
         """
         :return:(p,q,g) such as p,q large primes p = 2q+1
         """
 
-        field = reg.get_curve(EllipticCurveGroup.CURVE_NAME).field
+        field = reg.get_curve(curve_name).field
         ec_order = field.n
 
         return (2*ec_order+1, ec_order, EllipticCurvePoint.from_coords(EllipticCurveGroup.CURVE_NAME,
