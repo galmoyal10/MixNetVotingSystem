@@ -1,4 +1,3 @@
-import random as rand
 import hashlib as hl
 
 from zkproof.prover import SwitchProver

@@ -1,4 +1,4 @@
-import random as rand
+from secure_random import SecureRandom
 
 
 class SwitchVerifier:
@@ -15,7 +15,6 @@ class SwitchVerifier:
         self.g = generator
 
         self._challenge_func = challenge_func
-        rand.seed(17)
 
     # Return a challenge chosen at random, given the commitment of the prover
     def challenge(self, t_matrix, w_matrix):
@@ -56,4 +55,5 @@ class SwitchVerifier:
     # Create a challenge based on T, W
     @staticmethod
     def generate_challenge(w_matrix, t_matrix):
+        rand = SecureRandom()
         return rand.getrandbits(len(t_matrix) + len(w_matrix))

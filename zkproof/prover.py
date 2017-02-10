@@ -1,5 +1,5 @@
 import numpy as np
-import random as rand
+from secure_random import SecureRandom
 
 
 class SwitchProver:
@@ -12,6 +12,8 @@ class SwitchProver:
 
         # Public key
         self.y = y
+
+        self._rand = SecureRandom()
 
         return
 
@@ -65,4 +67,4 @@ class SwitchProver:
         return e, self.z
 
     def rand_num(self):
-        return rand.randrange(self.q)
+        return self._rand.randrange(self.q)

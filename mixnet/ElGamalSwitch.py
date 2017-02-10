@@ -1,5 +1,5 @@
 from switch import Switch
-from random import randint
+from secure_random import SecureRandom
 
 class EGTuple:
     def __init__(self, m, g):
@@ -10,11 +10,12 @@ class EGTuple:
 class ElGamalSwitch(Switch):
     def __init__(self,o1=(0, 0), o2=(0, 0)):
         super(ElGamalSwitch, self).__init__(o1, o2)
+        self._rand = SecureRandom()
 
     def switch(self, i0, i1):
-        r0 = randint(0, self._group_order)
-        r1 = randint(0, self._group_order)
-        b = randint(0, 1)
+        r0 = self._rand.randint(0, self._group_order)
+        r1 = self._rand.randint(0, self._group_order)
+        b = self._rand.randint(0, 1)
 
         i0_switch = EGTuple(i0.m + (self._pk * r0), i0.g + (self._generator * r0))
         i1_switch = EGTuple(i1.m + (self._pk * r1), i1.g + (self._generator * r1))
