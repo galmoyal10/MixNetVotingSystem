@@ -20,11 +20,11 @@ class FsSwitchVerifier:
     # Given the prover's response to the challenge, verify the proof's validity
     # e - array of length 2
     # z - 2x2 matrix
-    def verify(self, tMatrix, wMatrix, e, z, in_m, in_g, out_m, out_g):
-        self.verifier.challenge(tMatrix, wMatrix)
-        return self.verifier.verify(e, z, in_m, in_g, out_m, out_g)
+    def verify(self, message, T, W, e, z, in_m, in_g, out_m, out_g):
+        self.verifier.challenge(message)
+        return self.verifier.verify(T, W, e, z, in_m, in_g, out_m, out_g)
 
     # Create a challenge based on T, W
     @staticmethod
-    def getChallenge(tMatrix, wMatrix):
-        return int(hl.sha256(tMatrix.tostring() + wMatrix.tostring()).hexdigest(), 16)
+    def getChallenge(message):
+        return int(hl.sha256(message).hexdigest(), 16)

@@ -17,19 +17,16 @@ class SwitchVerifier:
         self._challenge_func = challenge_func
 
     # Return a challenge chosen at random, given the commitment of the prover
-    def challenge(self, t_matrix, w_matrix):
-        self._T = t_matrix
-        self._W = w_matrix
-
+    def challenge(self, message):
         # Generate a challenge c from Z_q
-        self._c = self._challenge_func(self._T, self._W)
+        self._c = self._challenge_func(message)
 
         return self._c
 
     # Given the prover's response to the given challenge, verify the proof's validity
     # e - array of length 2
     # z - 2x2 matrix
-    def verify(self, e, z, in_m, in_g, out_m, out_g):
+    def verify(self, T, W, e, z, in_m, in_g, out_m, out_g):
 
         # Validation check for e0 + e1 = c (mod q)
         if (self._c % self.q) != ((e[0] + e[1]) % self.q):
@@ -48,7 +45,7 @@ class SwitchVerifier:
                 w_second_clause = (out_g[b_xor_i] + in_g[i].inverse()) * e[b]
                 W_bi = (self.g * z[b][i]) + w_second_clause
 
-                if not (T_bi == self._T[b, i] and W_bi == self._W[b, i]):
+                if not (T_bi == T[b][i] and W_bi == W[b][i]):
                     return False
         return True
 

@@ -41,14 +41,54 @@ class EllipticCurvePoint(MultiplicativeGroupItem):
         return EllipticCurvePoint(curve_name=curve_name, x_coord=x, y_coord=y)
 
     @classmethod
-    def from_asn_bytestring(cls, curve_name, bytestring):
+    def from_compressed_form(cls, curve_name, bytestring):
         """
-        Creates an elliptic curve point from asn-1 encoded bytestring
+        Creates an elliptic curve point from compressed form
         """
-        asn1_ec = ECPoint.load(bytestring)
-        x,y = asn1_ec.to_coords()
+        key_bytes_len = len(bytestring)
+
+        key_type = bytestring[0]
+
+        if key_bytes_len != 33:
+            raise ValueError("key_bytes must be exactly 33 bytes long when compressed.")
+
+        x = int(bytestring[1:33].encode("hex"), 16)
+        ys = EllipticCurvePoint.y_from_x(x, curve_name)
+
+        # Pick the one that corresponds to key_type
+        last_bit = int(key_type.encode("hex"), 16) - 0x2
+        for y in ys:
+            if y & 0x1 == last_bit:
+                break
+
         return EllipticCurvePoint(curve_name=curve_name, x_coord=x, y_coord=y)
 
+    @staticmethod
+    def modsqrt(a, n):
+        if a == 0:
+            return 0
+        elif n == 2:
+            return n
+        elif n % 4 == 3:
+            return pow(a, (n + 1) // 4, n)
+
+    @staticmethod
+    def y_from_x(x, curve_name):
+        curve = reg.get_curve(curve_name)
+        a = (pow(x, 3, curve.field.p) + curve.a * x + curve.b) % curve.field.p
+        y1 = EllipticCurvePoint.modsqrt(a, curve.field.p)
+        y2 = curve.field.p - y1
+        rv = []
+
+        if ec.Point(curve, x, y1).on_curve:
+            rv.append(y1)
+        if ec.Point(curve, x, y2).on_curve:
+            # Put the even parity one first.
+            if y2 & 0x1 == 1:
+                rv.append(y2)
+            else:
+                rv.insert(0, y2)
+        return rv
 
     def _plus(self, other):
         assert type(other) is EllipticCurvePoint, "parameter given is not an Elliptic Curve Point!"
@@ -82,6 +122,3 @@ class EllipticCurvePoint(MultiplicativeGroupItem):
 
     def __repr__(self):
         return self._ec_point.__repr__()
-
-    def asn1_encode(self):
-        return ECPoint.from_coords(self._ec_point.x, self._ec_point.y).dump()

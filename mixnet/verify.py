@@ -5,7 +5,6 @@ from itertools import izip
 from zkproof.fs_hueristics.fs_verifier import FsSwitchVerifier
 import hashlib as hl
 from group_arithmetics.elliptic_curve_group import *
-import tinyec.registry as reg
 from cryptography.hazmat.backends import default_backend
 from cryptography.hazmat.primitives.serialization import load_der_public_key
 
@@ -39,7 +38,7 @@ def get_mixnet_output(input_file):
 
 
 def verify(input_file, key_file):
-    publik_key, curve_name = get_public_key(key_file)
+    public_key, curve_name = get_public_key(key_file)
     _, order, generator = EllipticCurveGroup.generate(curve_name)
 
     mixnet_output = get_mixnet_output(input_file)
@@ -54,23 +53,25 @@ def verify(input_file, key_file):
 
             for i in xrange(2):
                 for j in xrange(2):
-                    T[i][j] = asn1_to_curvepoint(T[i][j])
-                    W[i][j] = asn1_to_curvepoint(W[i][j])
+                    T[i][j] = decompress_curve_point(T[i][j], curve_name)
+                    W[i][j] = decompress_curve_point(W[i][j], curve_name)
 
-            in_m = [asn1_to_curvepoint(input.c1.data) for input in switch.inputs]
-            in_g = [asn1_to_curvepoint(input.c2.data) for input in switch.inputs]
-            out_m = [asn1_to_curvepoint(output.c1.data) for output in switch.outputs]
-            out_g = [asn1_to_curvepoint(output.c2.data) for output in switch.outputs]
+            in_m = [decompress_curve_point(input.c1.data, curve_name) for input in switch.inputs]
+            in_g = [decompress_curve_point(input.c2.data, curve_name) for input in switch.inputs]
+            out_m = [decompress_curve_point(output.c1.data, curve_name) for output in switch.outputs]
+            out_g = [decompress_curve_point(output.c2.data, curve_name) for output in switch.outputs]
 
-            z = [[switch.proof.finalMessage.clause0.clause0.xcr, switch.proof.finalMessage.clause0.clause1.xcr],
-                 [switch.proof.finalMessage.clause1.clause0.xcr, switch.proof.finalMessage.clause1.clause1.xcr]]
-            c0 = switch.proof.finalMessage.c0
-            c1 = hl.sha256(switch.proof.SerializeToString()) - c0
-            assert verifier.verify(T, W, [c0, c1], z, in_m, in_g, out_m, out_g)
+            z = [[int(switch.proof.finalMessage.clause0.clause0.xcr.data.encode("hex"), 16), int(switch.proof.finalMessage.clause0.clause1.xcr.data.encode("hex"), 16)],
+                 [int(switch.proof.finalMessage.clause1.clause0.xcr.data.encode("hex"), 16), int(switch.proof.finalMessage.clause1.clause1.xcr.data.encode("hex"), 16)]]
+            message = switch.proof.SerializeToString()
+            challenge = int(hl.sha256(message).hexdigest(), 16)
+            c0 = int(switch.proof.finalMessage.c0.data.encode("hex"), 16)
+            c1 = (challenge - c0) % order
+            assert verifier.verify(message, T, W, [c0, c1], z, in_m, in_g, out_m, out_g)
     print "Done, all proofs have been verified."
 
-def asn1_to_curvepoint(asn_point):
-    return EllipticCurvePoint.from_asn_bytestring(EllipticCurveGroup.CURVE_NAME, asn_point)
+def decompress_curve_point(compressed_point, curve_name):
+    return EllipticCurvePoint.from_compressed_form(curve_name, compressed_point)
 
 def parse_public_key(key_bytes):
     b = bytes(key_bytes)
