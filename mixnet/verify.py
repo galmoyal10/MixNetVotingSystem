@@ -7,6 +7,7 @@ import hashlib as hl
 from group_arithmetics.elliptic_curve_group import *
 from cryptography.hazmat.backends import default_backend
 from cryptography.hazmat.primitives.serialization import load_der_public_key
+import gui
 
 def pairwise(iterable):
     a = iter(iterable)
@@ -46,29 +47,30 @@ def verify(input_file, key_file):
     verifier = FsSwitchVerifier(generator, order, public_key)
     for layer in mixnet_output:
         for switch in layer:
-            T = [[switch.proof.firstMessage.clause0.clause0.gr.data, switch.proof.firstMessage.clause0.clause1.gr.data],
+            W = [[switch.proof.firstMessage.clause0.clause0.gr.data, switch.proof.firstMessage.clause0.clause1.gr.data],
                  [switch.proof.firstMessage.clause1.clause0.gr.data, switch.proof.firstMessage.clause1.clause1.gr.data]]
-            W = [[switch.proof.firstMessage.clause0.clause0.hr.data, switch.proof.firstMessage.clause0.clause1.hr.data],
+            T = [[switch.proof.firstMessage.clause0.clause0.hr.data, switch.proof.firstMessage.clause0.clause1.hr.data],
                  [switch.proof.firstMessage.clause1.clause0.hr.data, switch.proof.firstMessage.clause1.clause1.hr.data]]
 
             for i in xrange(2):
                 for j in xrange(2):
-                    T[i][j] = decompress_curve_point(T[i][j], curve_name)
-                    W[i][j] = decompress_curve_point(W[i][j], curve_name)
+                    T[i][j] = decompress_curve_point(T[i][j], curve_name).inverse()
+                    W[i][j] = decompress_curve_point(W[i][j], curve_name).inverse()
 
-            in_m = [decompress_curve_point(input.c1.data, curve_name) for input in switch.inputs]
-            in_g = [decompress_curve_point(input.c2.data, curve_name) for input in switch.inputs]
-            out_m = [decompress_curve_point(output.c1.data, curve_name) for output in switch.outputs]
-            out_g = [decompress_curve_point(output.c2.data, curve_name) for output in switch.outputs]
+            in_g = [decompress_curve_point(input.c1.data, curve_name) for input in switch.inputs]
+            in_m = [decompress_curve_point(input.c2.data, curve_name) for input in switch.inputs]
+            out_g = [decompress_curve_point(output.c1.data, curve_name) for output in switch.outputs]
+            out_m = [decompress_curve_point(output.c2.data, curve_name) for output in switch.outputs]
 
             z = [[int(switch.proof.finalMessage.clause0.clause0.xcr.data.encode("hex"), 16), int(switch.proof.finalMessage.clause0.clause1.xcr.data.encode("hex"), 16)],
                  [int(switch.proof.finalMessage.clause1.clause0.xcr.data.encode("hex"), 16), int(switch.proof.finalMessage.clause1.clause1.xcr.data.encode("hex"), 16)]]
-            message = switch.proof.SerializeToString()
+            message = switch.proof.firstMessage.SerializeToString()
             challenge = int(hl.sha256(message).hexdigest(), 16)
             c0 = int(switch.proof.finalMessage.c0.data.encode("hex"), 16)
             c1 = (challenge - c0) % order
-            assert verifier.verify(message, T, W, [c0, c1], z, in_m, in_g, out_m, out_g)
-    print "Done, all proofs have been verified."
+            if not verifier.verify(message, T, W, [c0, c1], z, in_m, in_g, out_m, out_g):
+                return "Oops, proof is invalid. Proof Location: layer={}, switchIdx={}".format(switch.location.layer, switch.location.switchIdx)
+    return "Done, all proofs have been verified."
 
 def decompress_curve_point(compressed_point, curve_name):
     return EllipticCurvePoint.from_compressed_form(curve_name, compressed_point)
@@ -78,8 +80,12 @@ def parse_public_key(key_bytes):
     key = load_der_public_key(b, default_backend())
     return key.public_numbers()
 
+### Example Snippet
+### verify(r"C:\test\mixed.enc", r"c:\test\ec.key")
+
 if __name__ == '__main__':
-    verify(r"C:\test\mix", r"c:\test\ec.key")
+    gui.GUIUtils(verify)
+
 
 
 
