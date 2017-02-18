@@ -112,7 +112,7 @@ def verify(input_file, key_file):
             c1 = (challenge - c0) % order
             if not verifier.verify(message, T, W, [c0, c1], z, in_m, in_g, out_m, out_g):
                 print "Verification error!\n" \
-                      "Proof location: Layer={}, Index in Layer={}".format(layerIndex, switchIndex)
+                      "Proof location: Layer={}, Switch in Layer={}".format(layerIndex, switchIndex)
                 return False
             print "Verified successfully"
             print "***"
