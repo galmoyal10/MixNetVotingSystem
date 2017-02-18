@@ -1,11 +1,12 @@
 import datetime
-from verify import VerificationException
 from PyQt4 import QtCore
 from PyQt4.QtCore import pyqtSlot
 from PyQt4.QtCore import *
 from PyQt4.QtGui import *
 
 import sys
+
+
 class GUIUtils(object):
     """
     implementation of applications GUI
@@ -70,7 +71,7 @@ class GUIUtils(object):
             verification_function(self._cipher_label.text(), self._key_label.text())
             res_str = "Succes!"
             label.setStyleSheet('color: green')
-        except VerificationException, e:
+        except Exception, e:
             res_str = e.message
             label.setStyleSheet('color: red')
         label.setText(res_str)

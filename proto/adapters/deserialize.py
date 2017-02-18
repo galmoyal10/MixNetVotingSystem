@@ -3,6 +3,7 @@ from proto.proto_files.crypto_pb2 import RerandomizableEncryptedMessage
 from proto.proto_files.mixing_pb2 import MixBatchHeader
 from proto.proto_files.mixing_pb2 import Mix2Proof
 from google.protobuf.internal import decoder
+from google.protobuf.message import DecodeError
 
 # Utility functions for protobuf reading #
 
@@ -69,7 +70,7 @@ def deserialize_mixnet_output_from_file(file_path):
             proofs_of_layer, current_pos = deserialize_messages_list(messages_buffer, 2 ** (header.logN - 1), current_pos, Mix2Proof)
             proofs.append(proofs_of_layer)
         return header, ciphers, proofs
-    except Exception:
+    except DecodeError:
         raise DeserializationException(file_path)
 
 
@@ -89,5 +90,5 @@ def deserialize_from_file(file_path, message_type):
             message, current_pos = deserialize_message_from_buffer(messages_buffer, current_pos, message_type)
             messages.append(message)
         return messages
-    except Exception:
+    except DecodeError:
         raise DeserializationException(file_path)

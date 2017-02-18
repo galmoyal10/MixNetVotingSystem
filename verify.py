@@ -9,12 +9,6 @@ from cryptography.hazmat.backends import default_backend
 from cryptography.hazmat.primitives.serialization import load_der_public_key
 
 
-class VerificationException(Exception):
-     def __init__(self, layer, index):
-         self.message = "Verification error!\n" \
-                        "Proof location: Layer={}, Index in Layer={}".format(layer, index)
-
-
 def pairwise(iterable):
     a = iter(iterable)
     return izip(a, a)
@@ -60,17 +54,19 @@ def get_mixnet_output(input_file):
     return format_protobuf_output(header, ciphers, proofs)
 
 
-def get_first_message_clauses(switch_proof, field_name):
-    return [[getattr(switch_proof.firstMessage.clause0.clause0, field_name).data, getattr(switch_proof.firstMessage.clause0.clause1, field_name).data],
-            [getattr(switch_proof.firstMessage.clause1.clause0, field_name).data, getattr(switch_proof.firstMessage.clause1.clause1, field_name).data]]
+def get_first_message_clauses(switch_proof, field_name, curve_name):
+    return [[decompress_curve_point(getattr(switch_proof.firstMessage.clause0.clause0, field_name).data, curve_name).inverse(),
+             decompress_curve_point(getattr(switch_proof.firstMessage.clause0.clause1, field_name).data, curve_name).inverse()],
+            [decompress_curve_point(getattr(switch_proof.firstMessage.clause1.clause0, field_name).data, curve_name).inverse(),
+             decompress_curve_point(getattr(switch_proof.firstMessage.clause1.clause1, field_name).data, curve_name).inverse()]]
 
 
-def get_w(switch_proof):
-    return get_first_message_clauses(switch_proof, "gr")
+def get_w(switch_proof, curve_name):
+    return get_first_message_clauses(switch_proof, "gr", curve_name)
 
 
-def get_t(switch_proof):
-    return get_first_message_clauses(switch_proof, "hr")
+def get_t(switch_proof, curve_name):
+    return get_first_message_clauses(switch_proof, "hr", curve_name)
 
 
 def decompress_curve_point(compressed_point, curve_name):
@@ -94,17 +90,14 @@ def verify(input_file, key_file):
     _, order, generator = EllipticCurveGroup.generate(curve_name)
 
     mixnet_output = get_mixnet_output(input_file)
-
+    print "***Starting Verification***\n" \
+          "Mixnet Size: {} X {}".format(len(mixnet_output[0]) * 2, len(mixnet_output))
     verifier = FsSwitchVerifier(generator, order, public_key)
     for layerIndex, layer in enumerate(mixnet_output):
         for switchIndex, switch in enumerate(layer):
-            W = get_w(switch.proof)
-            T = get_t(switch.proof)
-
-            for i in xrange(2):
-                for j in xrange(2):
-                    T[i][j] = decompress_curve_point(T[i][j], curve_name).inverse()
-                    W[i][j] = decompress_curve_point(W[i][j], curve_name).inverse()
+            print "Verifying Switch proof {} of Layer {}".format(switchIndex, layerIndex)
+            W = get_w(switch.proof, curve_name)
+            T = get_t(switch.proof, curve_name)
 
             in_g = [decompress_curve_point(input.c1.data, curve_name) for input in switch.inputs]
             in_m = [decompress_curve_point(input.c2.data, curve_name) for input in switch.inputs]
@@ -118,5 +111,9 @@ def verify(input_file, key_file):
             c0 = int(switch.proof.finalMessage.c0.data.encode("hex"), 16)
             c1 = (challenge - c0) % order
             if not verifier.verify(message, T, W, [c0, c1], z, in_m, in_g, out_m, out_g):
-                raise VerificationException(layerIndex, switchIndex)
+                print "Verification error!\n" \
+                      "Proof location: Layer={}, Index in Layer={}".format(layerIndex, switchIndex)
+                return False
+            print "Verified successfully"
+            print "***"
     return True
