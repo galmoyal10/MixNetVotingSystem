@@ -1,10 +1,12 @@
 import tinyec.ec as ec
 import tinyec.registry as reg
 
-from asn1crypto.keys import ECPoint
 from group import *
 from copy import deepcopy
 
+class EcException(Exception):
+    def __init__(self):
+        self.message = "Invalid elliptic curve point"
 
 class EllipticCurveGroup(MultiplicativeGroup):
     CURVE_NAME = "secp256r1"
@@ -33,8 +35,9 @@ class EllipticCurvePoint(MultiplicativeGroupItem):
             self._ec_point = deepcopy(kwargs['point'])
         elif kwargs.has_key('curve_name') and kwargs.has_key('x_coord') and kwargs.has_key('y_coord'):
             self._ec_point = ec.Point(reg.get_curve(kwargs['curve_name']), kwargs['x_coord'], kwargs['y_coord'])
-        else:
-            raise NotImplementedError("Unexpected input at point initialization")
+        if not self._ec_point.on_curve:
+            raise EcException
+
 
     @classmethod
     def from_coords(cls, curve_name, x, y):
@@ -80,9 +83,9 @@ class EllipticCurvePoint(MultiplicativeGroupItem):
         y2 = curve.field.p - y1
         rv = []
 
-        if ec.Point(curve, x, y1).on_curve:
+        if EllipticCurvePoint(curve_name=curve_name, x_coord=x, y_coord=y1).on_curve:
             rv.append(y1)
-        if ec.Point(curve, x, y2).on_curve:
+        if EllipticCurvePoint(curve_name=curve_name, x_coord=x, y_coord=y2).on_curve:
             # Put the even parity one first.
             if y2 & 0x1 == 1:
                 rv.append(y2)
@@ -122,3 +125,6 @@ class EllipticCurvePoint(MultiplicativeGroupItem):
 
     def __repr__(self):
         return self._ec_point.__repr__()
+
+    def on_curve(self):
+        return self._ec_point.on_curve

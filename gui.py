@@ -1,4 +1,5 @@
 import datetime
+from verify import VerificationException
 from PyQt4 import QtCore
 from PyQt4.QtCore import pyqtSlot
 from PyQt4.QtCore import *
@@ -48,10 +49,10 @@ class GUIUtils(object):
         self._create_label("Please select encryption keys file and input file", 30,30)
 
         self._key_label = self._create_label("", 50, 100)
-        self._create_btn("Key-Pair", 50, 70, lambda: self._select_file(self._key_label))
+        self._create_btn("Keys File", 50, 70, lambda: self._select_file(self._key_label))
 
         self._cipher_label = self._create_label("", 50, 160)
-        self._create_btn("Cipher List", 50, 130, lambda: self._select_file(self._cipher_label))
+        self._create_btn("Mixnet Result File", 50, 130, lambda: self._select_file(self._cipher_label))
 
         self._result_label = self._create_label("", 50, 230)
         self._create_btn("Verify",50, 200, lambda: self._verify_proofs(verification_function, self._result_label))
@@ -65,14 +66,20 @@ class GUIUtils(object):
     def _verify_proofs(self, verification_function, label):
         assert self._cipher_label.text() , "Cipher File was not specified"
         assert self._key_label.text() , "Key File was not specified"
-        res_str = verification_function(self._cipher_label.text(), self._key_label.text())
+        try:
+            verification_function(self._cipher_label.text(), self._key_label.text())
+            res_str = "Succes!"
+            label.setStyleSheet('color: green')
+        except VerificationException, e:
+            res_str = e.message
+            label.setStyleSheet('color: red')
         label.setText(res_str)
         label.hide()
         label.show()
 
     @pyqtSlot()
     def _select_file(self, label):
-        label.setText(QFileDialog.getOpenFileName(self._w, "dsa"))
+        label.setText(QFileDialog.getOpenFileName(self._w, ""))
         label.hide()
         label.show()
 

@@ -46,7 +46,6 @@ class SwitchVerifier:
                 w_second_clause = (out_g[b_xor_i] + in_g[i].inverse()) * e[b]
                 W_bi = (self.g * z[b][i])
                 W_bi_verify = W[b][i].inverse() + w_second_clause
-
                 if not (T_bi == T_bi_verify and W_bi == W_bi_verify):
                     return False
         return True

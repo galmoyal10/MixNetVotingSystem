@@ -1,13 +1,19 @@
 from proto.adapters import deserialize
 from proto.proto_files import concrete_crypto_pb2
-from structs import SwitchProof
+from proto.adapters.structs import SwitchProof
 from itertools import izip
 from zkproof.fs_hueristics.fs_verifier import FsSwitchVerifier
 import hashlib as hl
 from group_arithmetics.elliptic_curve_group import *
 from cryptography.hazmat.backends import default_backend
 from cryptography.hazmat.primitives.serialization import load_der_public_key
-import gui
+
+
+class VerificationException(Exception):
+     def __init__(self, layer, index):
+         self.message = "Verification error!\n" \
+                        "Proof location: Layer={}, Index in Layer={}".format(layer, index)
+
 
 def pairwise(iterable):
     a = iter(iterable)
@@ -15,6 +21,13 @@ def pairwise(iterable):
 
 
 def format_protobuf_output(header, ciphers, proofs):
+    """
+    returns a matrix of SwitchProofs assembled from protobuf output file in the specified format
+    :param header: the MixBatchHeader of the mixnet proofs
+    :param ciphers: a matrix of ElGamalCiphertext
+    :param proofs: a matrix of Mix2Proof
+    :return:
+    """
     if header.layers == 1:
         return [[SwitchProof(ciphers[0], ciphers[1], proofs[0][0])]]
     mixnet_output = []
@@ -27,6 +40,11 @@ def format_protobuf_output(header, ciphers, proofs):
 
 
 def get_public_key(key_file):
+    """
+    reads public key used in mixing from input file
+    :param key_file: the path file to read the public key from
+    :return: the public key and the curve name used
+    """
     raw_public_key = deserialize.deserialize_from_file(key_file, concrete_crypto_pb2.ElGamalPublicKey)[0].subject_public_key_info
     public_key_info = parse_public_key(raw_public_key)
     public_key = EllipticCurvePoint.from_coords(public_key_info.curve.name, public_key_info.x, public_key_info.y)
@@ -34,23 +52,54 @@ def get_public_key(key_file):
 
 
 def get_mixnet_output(input_file):
+    """
+    generates a matrix of SwitchProofs from mixer.jar utility output file
+    :param input_file: the output of the mixer.jar
+    """
     header, ciphers, proofs = deserialize.deserialize_mixnet_output_from_file(input_file)
     return format_protobuf_output(header, ciphers, proofs)
 
 
+def get_first_message_clauses(switch_proof, field_name):
+    return [[getattr(switch_proof.firstMessage.clause0.clause0, field_name).data, getattr(switch_proof.firstMessage.clause0.clause1, field_name).data],
+            [getattr(switch_proof.firstMessage.clause1.clause0, field_name).data, getattr(switch_proof.firstMessage.clause1.clause1, field_name).data]]
+
+
+def get_w(switch_proof):
+    return get_first_message_clauses(switch_proof, "gr")
+
+
+def get_t(switch_proof):
+    return get_first_message_clauses(switch_proof, "hr")
+
+
+def decompress_curve_point(compressed_point, curve_name):
+    return EllipticCurvePoint.from_compressed_form(curve_name, compressed_point)
+
+
+def parse_public_key(key_bytes):
+    b = bytes(key_bytes)
+    key = load_der_public_key(b, default_backend())
+    return key.public_numbers()
+
+
 def verify(input_file, key_file):
+    """
+    verify a mixnet output
+    :param input_file: the mixnet output file
+    :param key_file: the public key file
+    :return: true if verification succeeded, otherwise an exception is thrown
+    """
     public_key, curve_name = get_public_key(key_file)
     _, order, generator = EllipticCurveGroup.generate(curve_name)
 
     mixnet_output = get_mixnet_output(input_file)
 
     verifier = FsSwitchVerifier(generator, order, public_key)
-    for layer in mixnet_output:
-        for switch in layer:
-            W = [[switch.proof.firstMessage.clause0.clause0.gr.data, switch.proof.firstMessage.clause0.clause1.gr.data],
-                 [switch.proof.firstMessage.clause1.clause0.gr.data, switch.proof.firstMessage.clause1.clause1.gr.data]]
-            T = [[switch.proof.firstMessage.clause0.clause0.hr.data, switch.proof.firstMessage.clause0.clause1.hr.data],
-                 [switch.proof.firstMessage.clause1.clause0.hr.data, switch.proof.firstMessage.clause1.clause1.hr.data]]
+    for layerIndex, layer in enumerate(mixnet_output):
+        for switchIndex, switch in enumerate(layer):
+            W = get_w(switch.proof)
+            T = get_t(switch.proof)
 
             for i in xrange(2):
                 for j in xrange(2):
@@ -69,23 +118,5 @@ def verify(input_file, key_file):
             c0 = int(switch.proof.finalMessage.c0.data.encode("hex"), 16)
             c1 = (challenge - c0) % order
             if not verifier.verify(message, T, W, [c0, c1], z, in_m, in_g, out_m, out_g):
-                return "Oops, proof is invalid. Proof Location: layer={}, switchIdx={}".format(switch.location.layer, switch.location.switchIdx)
-    return "Done, all proofs have been verified."
-
-def decompress_curve_point(compressed_point, curve_name):
-    return EllipticCurvePoint.from_compressed_form(curve_name, compressed_point)
-
-def parse_public_key(key_bytes):
-    b = bytes(key_bytes)
-    key = load_der_public_key(b, default_backend())
-    return key.public_numbers()
-
-### Example Snippet
-### verify(r"C:\test\mixed.enc", r"c:\test\ec.key")
-
-if __name__ == '__main__':
-    gui.GUIUtils(verify)
-
-
-
-
+                raise VerificationException(layerIndex, switchIndex)
+    return True
