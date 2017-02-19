@@ -4,12 +4,15 @@ import tinyec.registry as reg
 from group import *
 from copy import deepcopy
 
+
 class EcException(Exception):
     def __init__(self):
         self.message = "Invalid elliptic curve point"
 
+
 class EllipticCurveGroup(MultiplicativeGroup):
     CURVE_NAME = "secp256r1"
+
     def __init__(self, g, q):
         self._g = g
         self._q = q
@@ -37,7 +40,6 @@ class EllipticCurvePoint(MultiplicativeGroupItem):
             self._ec_point = ec.Point(reg.get_curve(kwargs['curve_name']), kwargs['x_coord'], kwargs['y_coord'])
         if not self._ec_point.on_curve:
             raise EcException
-
 
     @classmethod
     def from_coords(cls, curve_name, x, y):
