@@ -32,7 +32,9 @@ class EllipticCurveGroup(MultiplicativeGroup):
 
 
 class EllipticCurvePoint(MultiplicativeGroupItem):
-
+    """
+    Concrete implementation of group element based on elliptic curve
+    """
     def __init__(self, **kwargs):
         if kwargs.has_key('point') and (type(kwargs['point']) is ec.Point or type(kwargs['point']) is ec.Inf):
             self._ec_point = deepcopy(kwargs['point'])
@@ -43,6 +45,9 @@ class EllipticCurvePoint(MultiplicativeGroupItem):
 
     @classmethod
     def from_coords(cls, curve_name, x, y):
+        """
+        Creates an elliptic curve point from coordinates
+        """
         return EllipticCurvePoint(curve_name=curve_name, x_coord=x, y_coord=y)
 
     @classmethod
@@ -70,6 +75,9 @@ class EllipticCurvePoint(MultiplicativeGroupItem):
 
     @staticmethod
     def modsqrt(a, n):
+        """
+        utility function for calculating modulo sqrt
+        """
         if a == 0:
             return 0
         elif n == 2:
@@ -79,6 +87,9 @@ class EllipticCurvePoint(MultiplicativeGroupItem):
 
     @staticmethod
     def y_from_x(x, curve_name):
+        """
+        utility frunction for calculating y coord from x coord
+        """
         curve = reg.get_curve(curve_name)
         a = (pow(x, 3, curve.field.p) + curve.a * x + curve.b) % curve.field.p
         y1 = EllipticCurvePoint.modsqrt(a, curve.field.p)
@@ -94,6 +105,8 @@ class EllipticCurvePoint(MultiplicativeGroupItem):
             else:
                 rv.insert(0, y2)
         return rv
+
+    # multiplicative group element operators
 
     def _plus(self, other):
         assert type(other) is EllipticCurvePoint, "parameter given is not an Elliptic Curve Point!"

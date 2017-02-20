@@ -33,18 +33,6 @@ def format_protobuf_output(header, ciphers, proofs):
     return mixnet_output
 
 
-def get_public_key(key_file):
-    """
-    reads public key used in mixing from input file
-    :param key_file: the path file to read the public key from
-    :return: the public key and the curve name used
-    """
-    raw_public_key = deserialize.deserialize_from_file(key_file, concrete_crypto_pb2.ElGamalPublicKey)[0].subject_public_key_info
-    public_key_info = parse_public_key(raw_public_key)
-    public_key = EllipticCurvePoint.from_coords(public_key_info.curve.name, public_key_info.x, public_key_info.y)
-    return public_key, public_key_info.curve.name
-
-
 def get_mixnet_output(input_file):
     """
     generates a matrix of SwitchProofs from mixer.jar utility output file
@@ -55,6 +43,13 @@ def get_mixnet_output(input_file):
 
 
 def get_first_message_clauses(switch_proof, field_name, curve_name):
+    """
+    retrieves a matrix of first clause fields from protobuf message
+    :param switch_proof: the proof to extract the clause from
+    :param field_name: field name in clause ("gr" or "hr")
+    :param curve_name: curve name...
+    :return: a matrix of inputs from first message of proof
+    """
     return [[decompress_curve_point(getattr(switch_proof.firstMessage.clause0.clause0, field_name).data, curve_name).inverse(),
              decompress_curve_point(getattr(switch_proof.firstMessage.clause0.clause1, field_name).data, curve_name).inverse()],
             [decompress_curve_point(getattr(switch_proof.firstMessage.clause1.clause0, field_name).data, curve_name).inverse(),
@@ -74,9 +69,25 @@ def decompress_curve_point(compressed_point, curve_name):
 
 
 def parse_public_key(key_bytes):
+    """
+    parses public key represented by an elliptic curve point that was used in mixing from raw bytes
+    :return: curve name and public key coordinates
+    """
     b = bytes(key_bytes)
     key = load_der_public_key(b, default_backend())
     return key.public_numbers()
+
+
+def get_public_key(key_file):
+    """
+    reads public key used in mixing from input file
+    :param key_file: the path file to read the public key from
+    :return: the public key and the curve name used
+    """
+    raw_public_key = deserialize.deserialize_from_file(key_file, concrete_crypto_pb2.ElGamalPublicKey)[0].subject_public_key_info
+    public_key_info = parse_public_key(raw_public_key)
+    public_key = EllipticCurvePoint.from_coords(public_key_info.curve.name, public_key_info.x, public_key_info.y)
+    return public_key, public_key_info.curve.name
 
 
 def verify(input_file, key_file):

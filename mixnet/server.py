@@ -3,8 +3,18 @@ from zkproof.fs_hueristics.fs_verifier import FsSwitchVerifier
 
 
 class Server(object):
-
+    """
+    operates the mixing and proving
+    """
     def __init__(self, initial_input, mixnet_layers, generator, public_key, q):
+        """
+        initializes the server
+        :param initial_input: initial input to mixnet
+        :param mixnet_layers: the mixnet itself
+        :param generator: multiplicative group generator
+        :param public_key: public key used in encryption
+        :param q: a big prime
+        """
         self._initial_input = Server._generate_initial_input_config(initial_input)
         for layer in mixnet_layers:
             for switch in layer:
@@ -13,8 +23,10 @@ class Server(object):
         self._prover = FsSwitchProver(generator, q, public_key)
         self._verifier = FsSwitchVerifier(generator, q, public_key)
 
-    # Given the benes network, mix the initial input through all the layers
     def mix(self):
+        """
+        Given the benes network, mix the initial input through all the layers
+        """
         outputs = []
         current_input = self._initial_input
 
@@ -27,8 +39,14 @@ class Server(object):
 
         return outputs
 
-    # Mix all the switches in the given layer
     def _mix_and_prove_layer(self, layer_index, layer, layer_input):
+        """
+        Mix all the switches in the given layer
+        :param layer_index: index of layer in mixnet
+        :param layer: layer switches
+        :param layer_input: input to layer
+        :return: outputs of layer and proofs of correctness
+        """
         # initializing an empty dictionary to store all inputs
         output = dict()
         proofs = list()

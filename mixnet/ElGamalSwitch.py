@@ -8,6 +8,9 @@ class EGTuple:
 
 
 class ElGamalSwitch(Switch):
+    """
+    implementation of El Gamal based switch (as specified in paper)
+    """
     def __init__(self,o1=(0, 0), o2=(0, 0)):
         super(ElGamalSwitch, self).__init__(o1, o2)
         self._rand = SecureRandom()

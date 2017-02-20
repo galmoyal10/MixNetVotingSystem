@@ -2,18 +2,27 @@ from abc import ABCMeta, abstractmethod
 
 
 class MultiplicativeGroup(object):
+    """
+    interface for multiplicative group
+    """
     __metaclass__ = ABCMeta
 
-    # returns (p,q,g) such as p,q large primes p = 2q+1
     @classmethod
     def generate(cls):
+        """
+        returns group generator and order
+        :return:
+        """
         raise NotImplementedError()
 
 
 class MultiplicativeGroupItem(object):
+    """
+    interface for multiplicative group item
+    """
     __metaclass__ = ABCMeta
 
-    # Returns the multiplication of (self * other) mod q
+    # interface for operators
     @abstractmethod
     def __add__(self, other):
         raise NotImplementedError()

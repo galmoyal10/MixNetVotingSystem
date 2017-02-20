@@ -2,7 +2,10 @@ class MixNetUtils(object):
     @staticmethod
     def build_network(size, switch_generator):
         """
-        size must be a power of 2
+        builds a benes network of the given size using the given switch generator
+        :param size: must be a power of 2
+        :param switch_generator: a SwitchGenerator instance
+        :return: a matrix of switches configured according to benes network specs
         """
         if size == 2:
             network = [[switch_generator.gen((0, 0), (0, 0))]]
