@@ -56,7 +56,7 @@ class EllipticCurvePoint(MultiplicativeGroupItem):
     @classmethod
     def from_asn1(cls, curve_name, asn1_encoded_bytestring):
         """
-        Creates an elliptic curve point from compressed form
+        Creates an elliptic curve point from asn1 encoded bytestring, which may be compressed or uncompressed.
         """
 
         # The point is not compressed
@@ -67,7 +67,6 @@ class EllipticCurvePoint(MultiplicativeGroupItem):
 
         # The point is not compressed
         elif asn1_encoded_bytestring[0] == '\x02' or asn1_encoded_bytestring[0] == '\x03':
-            print asn1_encoded_bytestring[0]
             key_bytes_len = len(asn1_encoded_bytestring)
 
             key_type = asn1_encoded_bytestring[0]
