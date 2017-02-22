@@ -50,10 +50,10 @@ def get_first_message_clauses(switch_proof, field_name, curve_name):
     :param curve_name: curve name...
     :return: a matrix of inputs from first message of proof
     """
-    return [[decompress_curve_point(getattr(switch_proof.firstMessage.clause0.clause0, field_name).data, curve_name).inverse(),
-             decompress_curve_point(getattr(switch_proof.firstMessage.clause0.clause1, field_name).data, curve_name).inverse()],
-            [decompress_curve_point(getattr(switch_proof.firstMessage.clause1.clause0, field_name).data, curve_name).inverse(),
-             decompress_curve_point(getattr(switch_proof.firstMessage.clause1.clause1, field_name).data, curve_name).inverse()]]
+    return [[decode_curve_point(getattr(switch_proof.firstMessage.clause0.clause0, field_name).data, curve_name).inverse(),
+             decode_curve_point(getattr(switch_proof.firstMessage.clause0.clause1, field_name).data, curve_name).inverse()],
+            [decode_curve_point(getattr(switch_proof.firstMessage.clause1.clause0, field_name).data, curve_name).inverse(),
+             decode_curve_point(getattr(switch_proof.firstMessage.clause1.clause1, field_name).data, curve_name).inverse()]]
 
 
 def get_w(switch_proof, curve_name):
@@ -64,7 +64,7 @@ def get_t(switch_proof, curve_name):
     return get_first_message_clauses(switch_proof, "hr", curve_name)
 
 
-def decompress_curve_point(compressed_point, curve_name):
+def decode_curve_point(compressed_point, curve_name):
     return EllipticCurvePoint.from_asn1(curve_name, compressed_point)
 
 
@@ -110,10 +110,10 @@ def verify(input_file, key_file):
             W = get_w(switch.proof, curve_name)
             T = get_t(switch.proof, curve_name)
 
-            in_g = [decompress_curve_point(input.c1.data, curve_name) for input in switch.inputs]
-            in_m = [decompress_curve_point(input.c2.data, curve_name) for input in switch.inputs]
-            out_g = [decompress_curve_point(output.c1.data, curve_name) for output in switch.outputs]
-            out_m = [decompress_curve_point(output.c2.data, curve_name) for output in switch.outputs]
+            in_g = [decode_curve_point(input.c1.data, curve_name) for input in switch.inputs]
+            in_m = [decode_curve_point(input.c2.data, curve_name) for input in switch.inputs]
+            out_g = [decode_curve_point(output.c1.data, curve_name) for output in switch.outputs]
+            out_m = [decode_curve_point(output.c2.data, curve_name) for output in switch.outputs]
 
             z = [[int(switch.proof.finalMessage.clause0.clause0.xcr.data.encode("hex"), 16), int(switch.proof.finalMessage.clause0.clause1.xcr.data.encode("hex"), 16)],
                  [int(switch.proof.finalMessage.clause1.clause0.xcr.data.encode("hex"), 16), int(switch.proof.finalMessage.clause1.clause1.xcr.data.encode("hex"), 16)]]
