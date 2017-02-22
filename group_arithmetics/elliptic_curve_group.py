@@ -3,11 +3,14 @@ import tinyec.registry as reg
 
 from group import *
 from copy import deepcopy
-
+from asn1crypto.keys import ECPoint
 
 class EcException(Exception):
     def __init__(self):
         self.message = "Invalid elliptic curve point"
+
+    def __str__(self):
+        return self.message
 
 
 class EllipticCurveGroup(MultiplicativeGroup):
@@ -55,23 +58,33 @@ class EllipticCurvePoint(MultiplicativeGroupItem):
         """
         Creates an elliptic curve point from compressed form
         """
-        key_bytes_len = len(bytestring)
 
-        key_type = bytestring[0]
+        #The point is not compressed
+        if bytestring[0] == '\x04':
+            asn1_ec = ECPoint.load(bytestring)
+            x, y = asn1_ec.to_coords()
+            return EllipticCurvePoint(curve_name=curve_name, x_coord=x, y_coord=y)
+        elif bytestring[0] == '\x02' or bytestring[0] == '\x03':
+            print bytestring[0]
+            key_bytes_len = len(bytestring)
 
-        if key_bytes_len != 33:
-            raise ValueError("key_bytes must be exactly 33 bytes long when compressed.")
+            key_type = bytestring[0]
 
-        x = int(bytestring[1:33].encode("hex"), 16)
-        ys = EllipticCurvePoint.y_from_x(x, curve_name)
+            if key_bytes_len != 33:
+                raise ValueError("key_bytes must be exactly 33 bytes long when compressed.")
 
-        # Pick the one that corresponds to key_type
-        last_bit = int(key_type.encode("hex"), 16) - 0x2
-        for y in ys:
-            if y & 0x1 == last_bit:
-                break
+            x = int(bytestring[1:33].encode("hex"), 16)
+            ys = EllipticCurvePoint.y_from_x(x, curve_name)
 
-        return EllipticCurvePoint(curve_name=curve_name, x_coord=x, y_coord=y)
+            # Pick the one that corresponds to key_type
+            last_bit = int(key_type.encode("hex"), 16) - 0x2
+            for y in ys:
+                if y & 0x1 == last_bit:
+                    break
+
+            return EllipticCurvePoint(curve_name=curve_name, x_coord=x, y_coord=y)
+        else:
+            raise EcException()
 
     @staticmethod
     def modsqrt(a, n):
