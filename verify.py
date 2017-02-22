@@ -65,7 +65,7 @@ def get_t(switch_proof, curve_name):
 
 
 def decompress_curve_point(compressed_point, curve_name):
-    return EllipticCurvePoint.from_compressed_form(curve_name, compressed_point)
+    return EllipticCurvePoint.from_asn1(curve_name, compressed_point)
 
 
 def parse_public_key(key_bytes):
