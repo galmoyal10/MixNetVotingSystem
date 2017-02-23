@@ -41,11 +41,11 @@ class EllipticCurvePoint(MultiplicativeGroupItem):
         if kwargs.has_key('point') and (type(kwargs['point']) is ec.Point or type(kwargs['point']) is ec.Inf):
             self._ec_point = deepcopy(kwargs['point'])
         elif kwargs.has_key('curve_name') and kwargs.has_key('x_coord') and kwargs.has_key('y_coord'):
-            try:
-                self._ec_point = ec.Point(reg.get_curve(kwargs['curve_name']), kwargs['x_coord'], kwargs['y_coord'])
-            except ValueError:
+            curve_name = kwargs['curve_name']
+            if curve_name not in reg.EC_CURVE_REGISTRY.keys():
                 raise EcException("unsupported elliptic curve - {}\n"
-                              "supported curves: {}".format(kwargs['curve_name'], reg.EC_CURVE_REGISTRY.keys()))
+                                  "supported curves: {}".format(curve_name, reg.EC_CURVE_REGISTRY.keys()))
+            self._ec_point = ec.Point(reg.get_curve(curve_name), kwargs['x_coord'], kwargs['y_coord'])
         if not self._ec_point.on_curve:
             raise EcException
 
